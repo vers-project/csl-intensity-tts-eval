@@ -1,0 +1,50 @@
+# Numbers quoted in the paper text, as LaTeX macros (tts_evaluation.numbers).
+# Reads the distributions run of the figure.
+#
+# Paths starting with /path/to/ (and <date>/<time> folders) are placeholders: point them at
+# your own runs.
+#
+# Run with (from tts_evaluation/):
+#   uv run --extra cpu launch_experiment --script scripts/make_paper_numbers.py \
+#       --config configs/numbers.yaml
+distributions: /path/to/outputs/tts_evaluation/distributions/<date>/<time>/0
+paper_numbers_tex: /path/to/paper/numbers/partII_numbers.tex
+
+# The alpha-ratio regression of the figure (linear fit), compared with the predictor.
+alpha_attribute: intensity_alpha_linear
+# Calibrated natural speech: both estimates against the calibrated level, one row per sample of
+# the attribute table, the alpha regression joined from the distributions run's `join`.
+calibrated:
+  source: avid
+  join: tilt
+  label: pphi.leq_label_db
+  predictor: pphi.leq_db
+  alpha: tilt.leq_linear_db
+# RMS level of the waveform (dBFS), bottom row of the figure.
+rms_attribute: rms
+
+# Effort order defines the steps between consecutive levels.
+conditions:
+  effort: [soft, normal, loud, veryloud]
+  emotion: [neutral, calm, happy, sad, angry, fearful, disgust, surprised]
+
+# Named |a − b| between two cells [experiment, system, condition], between rounded medians.
+differences:
+  QwenLoudNaturalVeryLoud:
+    a: [effort, qwen3tts, loud]
+    b: [effort, natural, veryloud]
+  IndexFearfulNeutral:
+    a: [emotion, indextts2, fearful]
+    b: [emotion, indextts2, neutral]
+  QwenFearfulNeutral:
+    a: [emotion, qwen3tts, fearful]
+    b: [emotion, qwen3tts, neutral]
+
+# Cells left out of \\failMaxRateOther (quoted separately in the text).
+failure_exclude:
+  - [emotion, indextts2, angry]
+
+launcher:
+  output_dir: /path/to/outputs/tts_evaluation/numbers
+  device_launcher:
+    device: local

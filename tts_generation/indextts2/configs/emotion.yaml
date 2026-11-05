@@ -1,0 +1,78 @@
+# IndexTTS2, emotion experiment.
+#
+# Control = emotion vector.  The speaker prompt is the RAVDESS actor's NEUTRAL clip, the same
+# clip for every condition, so the speakers are the same 24 as in the CosyVoice 3 config.
+# Anchor = no emotion control: no vector, the emotion is taken from the speaker prompt
+# itself (IndexTTS2 has no "neutral" slot; "calm" is a condition, not the anchor).
+#
+# Text = the two RAVDESS statements; the speaker prompt is CROSSED as in the CosyVoice 3
+# config (the "kids" sentence uses the actor's "dogs" clip and vice versa).
+#
+#   24 actors × 2 sentences × 8 conditions = 384 samples per seed job, 1536 in total (4 seeds).
+#
+# Paths starting with /path/to/ are placeholders: point them at your own copies.
+#
+# Run with:
+#   uv run launch_experiment --script generate_parallel.py --config configs/emotion.yaml
+experiment: emotion
+
+# --- Model ---
+model:
+  dir: /path/to/pretrained_models/IndexTTS-2
+  fp16: true
+  deepspeed: false
+  cuda_kernel: false
+
+# --- Text: the two RAVDESS statements ---
+sentences:
+  kids: "Kids are talking by the door"
+  dogs: "Dogs are sitting by the door"
+
+# --- Speakers (RAVDESS; same block as the CosyVoice 3 emotion config) ---
+# Clips always come from the statement NOT being synthesised (crossed prompts).
+# IndexTTS2 uses only the anchor clip (the actor's neutral take) as its speaker prompt;
+# the emotion comes from the vector, so `intensity` does not affect it.
+ravdess:
+  metadata_csv: /path/to/metadata/ravdess_metadata.csv
+  root:         /path/to/RAVDESS/
+  actors: all                                     # all 24 RAVDESS actors
+  repetition: 1
+  intensity: strong
+
+# --- Conditions ---
+# Keys are the RAVDESS labels (so the analysis joins them to the natural references);
+# values are the IndexTTS2 slot that gets the weight.  `null` = no vector (the anchor).
+# "melancholic" is left out: RAVDESS has no natural reference for it.
+anchor: neutral
+conditions:
+  neutral:   null
+  calm:      calm
+  happy:     happy
+  sad:       sad
+  angry:     angry
+  fearful:   afraid
+  disgust:   disgusted
+  surprised: surprised
+# One-hot vector with this weight on the slot.  0.8 is the cap upstream's
+# normalize_emo_vec puts on the vector sum.  Upstream's per-slot bias (which would give
+# calm 0.56 and surprised 0.69) is NOT applied, so every emotion gets the same weight.
+emo_vector_weight: 0.8
+emo_alpha: 1.0
+use_random: false                                 # emotion matrix row picked by speaker similarity, deterministic
+
+# --- Sampling (upstream defaults, recorded here so they are visible) ---
+# do_sample true, top_p 0.8, top_k 30, temperature 0.8, num_beams 3.
+seed: 0                                           # re-seeded before every sample; swept below
+
+dry_run: false
+
+# --- Output (columns: generation_design/design.py; `control` = the slot) ---
+#   output_dir/manifest.csv, generation_log.csv
+#   output_dir/audio/{speaker_id}/{sentence_id}/{condition}.wav      (32-bit float)
+launcher:
+  output_dir: /path/to/outputs/tts_generation/indextts2/emotion
+  sweep:
+    cartesian:
+      seed: [0, 1, 2, 3]
+  device_launcher:
+    device: local

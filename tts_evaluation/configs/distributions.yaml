@@ -1,0 +1,47 @@
+# Absolute attribute distributions per condition: each system is compared with natural
+# speech on the range it produces.
+#
+# Reads the attribute table and joins the alpha-ratio baseline.  Output:
+# <output_dir>/distributions.csv.
+#
+# Paths starting with /path/to/ (and <date>/<time> folders) are placeholders: point them at
+# your own runs.
+#
+# Run with (from tts_evaluation/):
+#   uv run --extra cpu launch_experiment --script scripts/attribute_distributions.py \
+#       --config configs/distributions.yaml
+
+attributes_csv: /path/to/outputs/tts_evaluation/attributes/<date>/<time>/0/attributes.csv
+
+# The alpha-ratio baseline over the same manifests (tilt_predict.yaml): the level predicted
+# by the linear fit.
+joins:
+  tilt:
+    run: /path/to/outputs/tts_evaluation/tilt/<date>/<time>
+    columns: {leq_pred_deg1: leq_linear_db}
+
+# RAVDESS = neutral + strong takes (the TTS emotion prompts are strong takes).
+sources:
+  cosyvoice3_emotion:
+  indextts2_emotion:
+  qwen3tts_emotion:
+  ravdess: {query: "condition == 'neutral' or intensity == 'strong'"}
+  cosyvoice3_effort:
+  indextts2_effort:
+  qwen3tts_effort:
+  avid:
+
+# The figure and the numbers read the rows pooled over sex (sex = all).
+by: [experiment, system, source, condition, sex]
+pool: [sex]
+quantiles: [0.05, 0.25, 0.5, 0.75, 0.95]
+
+attributes:
+  intensity:              pphi.leq_db
+  intensity_alpha_linear: tilt.leq_linear_db
+  rms:                    level.rms_dbfs
+
+launcher:
+  output_dir: /path/to/outputs/tts_evaluation/distributions
+  device_launcher:
+    device: local

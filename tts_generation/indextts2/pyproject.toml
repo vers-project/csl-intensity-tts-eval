@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "indextts2-generation"
+version = "0.1.0"
+description = "IndexTTS2 sample generation"
+requires-python = "==3.11.*"
+dependencies = [
+    # IndexTTS2 at the commit used for the paper, unmodified.
+    "indextts",
+    # Listed here so that the CUDA index below applies (uv sources are not inherited
+    # from a dependency); the versions are indextts's own pins.
+    "torch==2.8.*",
+    "torchaudio==2.8.*",
+    "huggingface_hub",
+    "omegaconf",
+    "experiment-launcher",
+    "generation-design",
+]
+
+[tool.setuptools]
+packages = []
+
+[tool.uv.sources]
+indextts = { git = "https://github.com/index-tts/index-tts", rev = "7264ce2" }
+torch = { index = "pytorch-cu128" }
+torchaudio = { index = "pytorch-cu128" }
+experiment-launcher = { git = "https://github.com/vers-project/slurm_launcher", tag = "v0.1.0" }
+generation-design = { path = "../generation_design", editable = true }
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true

@@ -1,0 +1,48 @@
+# Frame-level vocal intensity of every manifest row, with the evaluation predictor.
+#
+# One job per manifest.  Each writes <output_dir>/<job>/predictions/{utterances.csv,
+# frames.csv.gz}; utterances.csv copies the manifest columns, so it joins back on utt_id.
+# sweep_lookup.csv maps the job index to its manifest.
+#
+# Paths starting with /path/to/ (and <date>/<time> folders) are placeholders: point them at
+# your own runs.
+#
+# Run from a clone of vocal-intensity-prediction:
+#   uv run --extra cu128 launch_experiment --script scripts/predict_intensity.py \
+#       --config <this file>
+
+# The evaluation predictor: WavLM Base+ layer 3, seed 0 = job 3 of
+# intensity_estimation/configs/train_predictor_grid.yaml.
+model:
+  run_dir: /path/to/outputs/intensity_prediction/<date>/<time>/3
+
+data:
+  metadata_csv: null              # set per job by the sweep
+  # The same roots as manifests.yaml: a TTS row's corpus is its system.
+  dataset_roots:
+    cosyvoice3: /path/to/outputs/tts_generation/cosyvoice3/
+    indextts2:  /path/to/outputs/tts_generation/indextts2/
+    qwen3tts:   /path/to/outputs/tts_generation/qwen3tts/
+    RAVDESS:    /path/to/RAVDESS/
+    AVID:       /path/to/AVID/
+  labels: false                   # true on `avid` only: it alone has calibration
+  batch_size: 1                   # the training run's test regime
+  num_workers: 8
+
+device: null
+
+launcher:
+  output_dir: /path/to/outputs/tts_evaluation/predictor
+  sweep:
+    zip:
+      source:
+        - {data.metadata_csv: /path/to/outputs/tts_evaluation/manifests/<date>/<time>/0/manifests/cosyvoice3_emotion.csv, data.labels: false}
+        - {data.metadata_csv: /path/to/outputs/tts_evaluation/manifests/<date>/<time>/0/manifests/cosyvoice3_effort.csv, data.labels: false}
+        - {data.metadata_csv: /path/to/outputs/tts_evaluation/manifests/<date>/<time>/0/manifests/indextts2_emotion.csv, data.labels: false}
+        - {data.metadata_csv: /path/to/outputs/tts_evaluation/manifests/<date>/<time>/0/manifests/indextts2_effort.csv, data.labels: false}
+        - {data.metadata_csv: /path/to/outputs/tts_evaluation/manifests/<date>/<time>/0/manifests/qwen3tts_emotion.csv, data.labels: false}
+        - {data.metadata_csv: /path/to/outputs/tts_evaluation/manifests/<date>/<time>/0/manifests/qwen3tts_effort.csv, data.labels: false}
+        - {data.metadata_csv: /path/to/outputs/tts_evaluation/manifests/<date>/<time>/0/manifests/ravdess.csv, data.labels: false}
+        - {data.metadata_csv: /path/to/outputs/tts_evaluation/manifests/<date>/<time>/0/manifests/avid.csv, data.labels: true}
+  device_launcher:
+    device: local

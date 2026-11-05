@@ -1,0 +1,47 @@
+# RMS level (dBFS) of every manifest row, with speech-eval.
+#
+# One job per manifest.  Each writes <output_dir>/<job>/metrics.csv; sweep_lookup.csv maps
+# the job index to its manifest.
+#
+# Paths starting with /path/to/ (and <date>/<time> folders) are placeholders: point them at
+# your own runs.
+#
+# Run from a clone of speech-eval (v0.2.0):
+#   uv run --extra cpu launch_experiment --script scripts/run_eval.py --config <this file>
+
+device: auto
+
+data:
+  manifest: null                  # set per job by the sweep
+  # The same roots as manifests.yaml: a TTS row's corpus is its system.
+  dataset_roots:
+    cosyvoice3: /path/to/outputs/tts_generation/cosyvoice3/
+    indextts2:  /path/to/outputs/tts_generation/indextts2/
+    qwen3tts:   /path/to/outputs/tts_generation/qwen3tts/
+    RAVDESS:    /path/to/RAVDESS/
+    AVID:       /path/to/AVID/
+  carry_columns: [source, corpus, speaker_id, sex, text]
+
+runner:
+  batch_size: 16
+  num_workers: 8
+  resume: true
+
+metrics:
+  - type: level
+
+launcher:
+  output_dir: /path/to/outputs/tts_evaluation/metrics
+  sweep:
+    zip:
+      source:
+        - {data.manifest: /path/to/outputs/tts_evaluation/manifests/<date>/<time>/0/manifests/cosyvoice3_emotion.csv}
+        - {data.manifest: /path/to/outputs/tts_evaluation/manifests/<date>/<time>/0/manifests/cosyvoice3_effort.csv}
+        - {data.manifest: /path/to/outputs/tts_evaluation/manifests/<date>/<time>/0/manifests/indextts2_emotion.csv}
+        - {data.manifest: /path/to/outputs/tts_evaluation/manifests/<date>/<time>/0/manifests/indextts2_effort.csv}
+        - {data.manifest: /path/to/outputs/tts_evaluation/manifests/<date>/<time>/0/manifests/qwen3tts_emotion.csv}
+        - {data.manifest: /path/to/outputs/tts_evaluation/manifests/<date>/<time>/0/manifests/qwen3tts_effort.csv}
+        - {data.manifest: /path/to/outputs/tts_evaluation/manifests/<date>/<time>/0/manifests/ravdess.csv}
+        - {data.manifest: /path/to/outputs/tts_evaluation/manifests/<date>/<time>/0/manifests/avid.csv}
+  device_launcher:
+    device: local

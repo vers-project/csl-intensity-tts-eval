@@ -1,0 +1,10 @@
+# Paths starting with /path/to/ are placeholders: point them at your own copies.
+model_id:  Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign
+revision:  5ecdb67327fd37bb2e042aab12ff7391903235d3   # the commit used in the paper
+model_dir: /path/to/pretrained_models/Qwen3-TTS-12Hz-1.7B-VoiceDesign
+check_load: true                                  # load once on CPU after the download
+
+launcher:
+  output_dir: /path/to/outputs/tts_generation/qwen3tts/download
+  device_launcher:
+    device: local

@@ -1,0 +1,3 @@
+[submodule "tts_generation/cosyvoice3/CosyVoice"]
+	path = tts_generation/cosyvoice3/CosyVoice
+	url = https://github.com/FunAudioLLM/CosyVoice.git

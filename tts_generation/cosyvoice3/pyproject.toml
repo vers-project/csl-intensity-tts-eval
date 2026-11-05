@@ -1,0 +1,78 @@
+[build-system]
+requires = ["setuptools<81"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cosyvoice3-generation"
+description = "CosyVoice 3 sample generation (CosyVoice itself is the git submodule ./CosyVoice)"
+version = "0.1.0"
+requires-python = "==3.12.*"
+dependencies = [
+    # core torch stack
+    "torch==2.3.1",
+    "torchaudio==2.3.1",
+    "numpy==1.26.4",
+
+    # cosyvoice model deps
+    "conformer==0.3.2",
+    "diffusers==0.29.0",
+    "HyperPyYAML==1.2.3",
+    "omegaconf==2.3.0",
+    "hydra-core==1.3.2",
+    "lightning==2.2.4",
+    "x-transformers==2.11.24",
+    "einops",
+    "tiktoken",
+
+    # frontend / text normalization
+    "openai-whisper==20231117",  # whisper.log_mel_spectrogram used in frontend.py
+    "wetext==0.0.4",             # text normalizer (no pynini dep)
+    "inflect==7.3.1",
+
+    # audio processing
+    "pyworld==0.3.4",
+    "scipy",
+
+    # speaker encoder / ONNX
+    "onnxruntime-gpu==1.18.0",
+    "onnx==1.16.0",
+    "protobuf==4.25",
+
+    # model download
+    "modelscope==1.20.0",
+    "huggingface_hub>=0.23.0",
+
+    # audio I/O
+    "soundfile==0.12.1",
+    "librosa==0.10.2",
+
+    # transformers backbone
+    "transformers==4.51.3",
+
+    # utilities
+    "networkx==3.1",
+    "rich==13.7.1",
+    "tqdm>=4.66.0",
+    "pydantic==2.7.0",
+    "matplotlib==3.7.5",
+    "pyarrow==18.1.0",
+    "gdown==5.1.0",
+    "wget==3.2",
+    "setuptools<81",
+
+    "pandas",
+
+    # launch experiments
+    "experiment-launcher",
+    "generation-design",
+]
+
+[tool.setuptools]
+packages = []
+
+[tool.uv.extra-build-dependencies]
+openai-whisper = ["setuptools<81"] # old version that still includes pkg_resources
+
+[tool.uv.sources]
+experiment-launcher = { git = "https://github.com/vers-project/slurm_launcher", tag = "v0.1.0" }
+generation-design = { path = "../generation_design", editable = true }

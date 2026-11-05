@@ -1,0 +1,84 @@
+# Qwen3-TTS VoiceDesign, emotion experiment.
+#
+# Control = TEXT ONLY: no audio prompt; the instruction sets the voice and the emotion.
+# Instruction = "{voice}. Speak {phrase}.": the attribute-list voice description and the
+# imperative style clause of the Qwen3-TTS README VoiceDesign examples ("Male, 17 years old,
+# tenor range, ..." / "Speak in an incredulous tone, ..."), nothing more.  Within a group of
+# conditions only {phrase} changes.  A voice is fixed by its description (gender + age),
+# not by a clip.
+# No phrase contains a level word.
+#
+# Text = the two RAVDESS statements.
+#
+#   24 voices × 2 sentences × 8 conditions = 384 samples per seed job, 1536 in total (4 seeds).
+#
+# Paths starting with /path/to/ are placeholders: point them at your own copies.
+#
+# Run with:
+#   uv run --extra cu128 launch_experiment --script generate_parallel.py --config configs/emotion.yaml
+experiment: emotion
+
+# --- Model ---
+model_dir: /path/to/pretrained_models/Qwen3-TTS-12Hz-1.7B-VoiceDesign
+language: English
+
+# --- Text: the two RAVDESS statements ---
+sentences:
+  kids: "Kids are talking by the door"
+  dogs: "Dogs are sitting by the door"
+
+# --- Voices: 12 female + 12 male, ages 20–75 in steps of 5; the id carries gender and age ---
+speakers:
+  F20: "Female, 20 years old"
+  F25: "Female, 25 years old"
+  F30: "Female, 30 years old"
+  F35: "Female, 35 years old"
+  F40: "Female, 40 years old"
+  F45: "Female, 45 years old"
+  F50: "Female, 50 years old"
+  F55: "Female, 55 years old"
+  F60: "Female, 60 years old"
+  F65: "Female, 65 years old"
+  F70: "Female, 70 years old"
+  F75: "Female, 75 years old"
+  M20: "Male, 20 years old"
+  M25: "Male, 25 years old"
+  M30: "Male, 30 years old"
+  M35: "Male, 35 years old"
+  M40: "Male, 40 years old"
+  M45: "Male, 45 years old"
+  M50: "Male, 50 years old"
+  M55: "Male, 55 years old"
+  M60: "Male, 60 years old"
+  M65: "Male, 65 years old"
+  M70: "Male, 70 years old"
+  M75: "Male, 75 years old"
+
+# --- Instructions ---
+template: "{voice}. Speak {phrase}."
+anchor: neutral
+conditions:
+  neutral:   "in a neutral tone"
+  calm:      "in a calm tone"
+  happy:     "in a happy tone"
+  sad:       "in a sad tone"
+  angry:     "in an angry tone"
+  fearful:   "in a fearful tone"
+  disgust:   "in a disgusted tone"
+  surprised: "in a surprised tone"
+
+# --- Sampling: seed_everything(seed) before every sample; the model's default sampling ---
+seed: 0                                           # swept below
+
+dry_run: false
+
+# --- Output (columns: generation_design/design.py; `control` = the full instruction) ---
+#   output_dir/manifest.csv, generation_log.csv
+#   output_dir/audio/{speaker_id}/{sentence_id}/{condition}.wav      (32-bit float)
+launcher:
+  output_dir: /path/to/outputs/tts_generation/qwen3tts/emotion
+  sweep:
+    cartesian:
+      seed: [0, 1, 2, 3]
+  device_launcher:
+    device: local

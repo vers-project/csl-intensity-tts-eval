@@ -1,0 +1,69 @@
+# CosyVoice 3, vocal-effort experiment.
+#
+# Control = acoustic prompt.  For one AVID speaker and one AVID sentence, the four takes of
+# that sentence (soft / normal / loud / very loud instruction) are the four prompts; the
+# normal take is the anchor.  The prompt text is therefore identical across the four
+# conditions and only the produced effort changes.
+#
+# Speakers: the AVID test speakers, the only ones whose session recordings carry our hand
+# annotation of the level and sentence of each take.
+#
+# Text = AVID sentences, so the natural AVID recordings and the TTS outputs say the same
+# words.  The synthesised sentences are disjoint from the prompt sentences: the model never
+# hears its own target sentence in the prompt.
+#
+#   6 speakers × 3 prompt sentences × 12 target sentences × 4 conditions = 864 samples per
+#   seed job, 1728 in total.
+#
+# Paths starting with /path/to/ are placeholders: point them at your own copies.
+#
+# Run with:
+#   uv run launch_experiment --script generate_parallel.py --config configs/effort.yaml
+experiment: effort
+
+# --- Model ---
+model_dir: /path/to/pretrained_models/Fun-CosyVoice3-0.5B
+fp16: false
+system_prompt: "You are a helpful assistant.<|endofprompt|>"
+
+# --- Prompts and text (AVID) ---
+# Same block in the IndexTTS2 effort config.  CosyVoice 3 uses the condition clip as prompt.
+avid:
+  root: /path/to/AVID/
+  # The AVID segment metadata with our hand annotation of the sessions merged in: the AVID
+  # test rows carry `level`, `sentence_id`, `repetition`, `session_index`, `excluded`.
+  metadata_csv: /path/to/metadata/avid_metadata_annotated.csv
+  corpus: AVID
+  split: test
+  speakers: all                                   # every annotated speaker
+  repetition: 1                                   # first reading of the sentence list
+  channel: 0                                      # speech mic (1 = EGG); a `channel` column wins
+  # Each id gives one set of 4 parallel prompts per speaker.  A set with a missing,
+  # excluded or doubled take is skipped and listed in skipped_prompt_sets.csv.
+  prompt_sentence_ids: [1, 2, 3]
+  # Sentences to synthesise; must not overlap prompt_sentence_ids.  The text of each id is
+  # its most frequent transcript, listed in target_texts.csv with n_variants.
+  target_sentence_ids: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+  # Prompts are cut from the session recording and kept under output_dir/prompts/.
+
+# --- Conditions (AVID instruction levels; the anchor is the normal take) ---
+anchor: normal
+conditions: [soft, normal, loud, veryloud]
+
+# --- Sampling ---
+seed: 0                                           # re-seeded before every sample; swept below
+
+dry_run: false
+
+# --- Output (columns: generation_design/design.py) ---
+#   output_dir/manifest.csv, generation_log.csv, target_texts.csv, skipped_prompt_sets.csv,
+#   prompt_sets.csv (the prompts' own metadata rows + `clip`)
+#   output_dir/prompts/{speaker_id}/{prompt_sentence_id}/{condition}.wav
+#   output_dir/audio/{speaker_id}/{prompt_sentence_id}/{sentence_id}/{condition}.wav  (float32)
+launcher:
+  output_dir: /path/to/outputs/tts_generation/cosyvoice3/effort
+  sweep:
+    cartesian:
+      seed: [0, 1]
+  device_launcher:
+    device: local

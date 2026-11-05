@@ -1,0 +1,80 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tts-evaluation"
+version = "0.1.0"
+description = "Evaluation of the TTS generations: manifests, attribute table, distributions, figure and paper numbers"
+requires-python = "==3.12.*"
+dependencies = [
+    "numpy",
+    "pandas",
+    "pyyaml",
+    "soundfile",
+    "experiment-launcher",
+    # Silero outer-silence trim of every manifest row (audio_utils.data.vad).  silero-vad
+    # is listed itself: audio-utils declares it only as an extra.
+    "audio-utils",
+    "silero-vad",
+    # Figure conventions (speech_eval.figures) and manifest checks (speech_eval.io).
+    "speech-eval",
+    # The RAVDESS and AVID readers shared with the generation scripts.
+    "generation-design",
+    "matplotlib",
+    # Spearman correlations of the paper numbers (pandas calls scipy for them).
+    "scipy",
+]
+
+[project.optional-dependencies]
+cpu = [
+  "torch",
+  "torchaudio",
+  "torchcodec",
+]
+cu128 = [
+  "torch",
+  "torchaudio",
+  "torchcodec",
+]
+
+[dependency-groups]
+dev = ["pytest"]
+
+[tool.uv]
+conflicts = [
+  [
+    { extra = "cpu" },
+    { extra = "cu128" },
+  ],
+]
+
+[tool.uv.sources]
+torch = [
+  { index = "pytorch-cu128", extra = "cu128"},
+  { index = "pytorch-cpu", extra = "cpu"},
+]
+torchaudio = [
+  { index = "pytorch-cu128", extra = "cu128"},
+  { index = "pytorch-cpu", extra = "cpu"},
+]
+# Always pull torchcodec from the CPU index, whatever the torch variant.
+torchcodec = { index = "pytorch-cpu" }
+
+experiment-launcher = { git = "https://github.com/vers-project/slurm_launcher", tag = "v0.1.0" }
+audio-utils = { git = "https://github.com/vers-project/audio_utils", tag = "v0.2.0" }
+speech-eval = { git = "https://github.com/vers-project/speech-eval", tag = "v0.2.0" }
+generation-design = { path = "../tts_generation/generation_design", editable = true }
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.setuptools.packages.find]
+include = ["tts_evaluation*"]

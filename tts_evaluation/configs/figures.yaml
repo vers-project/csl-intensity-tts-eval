@@ -1,0 +1,33 @@
+# The figure of the TTS evaluation (attribute_ranges), from the distributions run.
+# Writes PDF + PNG to <output_dir>/; set paper_figures_dir to also copy the PDF there.
+#
+# Paths starting with /path/to/ (and <date>/<time> folders) are placeholders: point them at
+# your own runs.
+#
+# Run with (from tts_evaluation/):
+#   uv run --extra cpu launch_experiment --script scripts/make_figures.py \
+#       --config configs/figures.yaml
+
+distributions: /path/to/outputs/tts_evaluation/distributions/<date>/<time>/0
+paper_figures_dir: null
+
+# Display order and tick labels.
+conditions:
+  effort: {soft: soft, normal: normal, loud: loud, veryloud: very loud}
+  emotion: {neutral: neutral, calm: calm, happy: happy, sad: sad, angry: angry,
+            fearful: fearful, disgust: disgust, surprised: surprised}
+
+# Experiments whose conditions are drawn in increasing order of the natural-speech median
+# Leq (pooled over sex); the others keep the order above.
+sort_by_natural_leq: [emotion]
+
+# One figure row per entry; rows with the same y_group share their y range.
+ranges:
+  - {attribute: intensity,              sex: all, label: "Leq, predictor (dB SPL)", y_group: leq}
+  - {attribute: intensity_alpha_linear, sex: all, label: "Leq, alpha ratio (dB SPL)", y_group: leq}
+  - {attribute: rms,                    sex: all, label: "RMS level (dBFS)"}
+
+launcher:
+  output_dir: /path/to/outputs/tts_evaluation/figures
+  device_launcher:
+    device: local

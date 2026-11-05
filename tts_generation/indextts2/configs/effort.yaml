@@ -1,0 +1,55 @@
+# IndexTTS2, vocal-effort experiment.
+#
+# Control = emotion AUDIO prompt.  The speaker prompt is fixed: the speaker's NORMAL take of
+# the prompt sentence.  The emotion prompt is the same speaker's take of the same sentence at
+# each level.  Anchor = normal, i.e. emotion prompt = speaker prompt.  So timbre is held
+# fixed by construction and only the emotion prompt's effort changes.
+#
+# Prompt selection, target sentences (AVID, disjoint from the prompt sentences), speakers and
+# counts are identical to the CosyVoice 3 effort config:
+#   6 speakers × 3 prompt sentences × 12 target sentences × 4 conditions = 864 per seed job,
+#   1728 in total.
+#
+# Paths starting with /path/to/ are placeholders: point them at your own copies.
+#
+# Run with:
+#   uv run launch_experiment --script generate_parallel.py --config configs/effort.yaml
+experiment: effort
+
+# --- Model ---
+model:
+  dir: /path/to/pretrained_models/IndexTTS-2
+  fp16: true
+  deepspeed: false
+  cuda_kernel: false
+
+# --- Prompts and text (AVID): same block as the CosyVoice 3 effort config ---
+# Speaker prompt = the anchor clip (normal take); emotion prompt = the condition clip.
+avid:
+  root: /path/to/AVID/
+  metadata_csv: /path/to/metadata/avid_metadata_annotated.csv
+  corpus: AVID
+  split: test
+  speakers: all                                   # every annotated speaker
+  repetition: 1                                   # first reading of the sentence list
+  channel: 0                                      # speech mic (1 = EGG)
+  prompt_sentence_ids: [1, 2, 3]
+  target_sentence_ids: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]   # disjoint from the prompts
+
+anchor: normal                                    # also the fixed speaker prompt
+conditions: [soft, normal, loud, veryloud]       # level of the emotion audio prompt
+emo_alpha: 1.0                                    # full weight on the emotion prompt
+
+# --- Sampling (upstream defaults: do_sample, top_p 0.8, top_k 30, temperature 0.8, num_beams 3) ---
+seed: 0                                           # re-seeded before every sample; swept below
+
+dry_run: false
+
+# --- Output: same files and layout as the CosyVoice 3 effort config ---
+launcher:
+  output_dir: /path/to/outputs/tts_generation/indextts2/effort
+  sweep:
+    cartesian:
+      seed: [0, 1]
+  device_launcher:
+    device: local

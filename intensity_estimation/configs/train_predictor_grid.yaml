@@ -1,0 +1,79 @@
+# The nine predictors of the intensity estimation benchmark: three feature extractors ×
+# three seeds, on speech frames only.
+#
+#   * log-mel spectrogram, 80 bands;
+#   * WavLM Base+, layer 3;
+#   * wav2vec 2.0 XLS-R 300M, layer 5.  XLS-R is pre-LN, so its truncated output is the
+#     encoder's final LayerNorm applied to hidden_states[5] (see vip/encoders/hf_ssl.py).
+#
+# Layers and checkpoints are selected on the AVID validation split; VIC and FLombard are
+# test-only.  Test metrics are computed over frames, sliding windows of
+# training.leq_windows_s, and utterances.
+#
+# Run from a clone of vocal-intensity-prediction (this file is its configs/grid_front_ends.yaml):
+#   uv run --extra cu128 launch_experiment --config <this file> --script scripts/train_predictor.py
+# Each job gets its own folder <output_dir>/<date>/<time>/<job_index>/, and sweep_lookup.csv
+# maps job indices to the swept values.  Job 3 (WavLM Base+, seed 0) is the predictor used to
+# evaluate the TTS systems.
+#
+# Paths starting with /path/to/ are placeholders: point them at your own copies.
+
+data:
+  dataset_roots:
+    AVID: /path/to/AVID/
+    VIC: /path/to/VIC/
+    FLombard: /path/to/FLombard/
+  metadata_csv: /path/to/metadata/vocal_intensity_prediction_metadata_with_labels.csv
+  chunk_duration_s: 2
+  window_length: 400
+  vad:
+    threshold: 0.5
+    min_island_ms: 0
+    min_silence_ms: 0
+    speech_pad_ms: 0
+
+extractor:
+  type: melspectrogram
+  n_mels: 80
+  frame_energy_norm: false      # log-mel only: required, keeps the absolute level in the features
+  model_name: null
+  layer: null
+
+model:
+  type: transformer
+  d_model: 128
+  n_layers: 6
+  head_dim: 32
+  n_heads: 4
+  mlp_ratio: 4
+  dropout: 0.2
+
+training:
+  hours_per_epoch: 5.2
+  batch_size: 32
+  num_workers: 16
+  max_epochs: 50
+  log_every_n_steps: 50
+  leq_windows_s: [0.26, 0.5, 1.0]
+
+launcher:
+  output_dir: /path/to/outputs/intensity_prediction
+  sweep:
+    zip:
+      front_end:
+        - {extractor.type: melspectrogram, extractor.model_name: null, extractor.layer: null}
+        - {extractor.type: wavlm, extractor.model_name: microsoft/wavlm-base-plus, extractor.layer: 3}
+        - {extractor.type: wav2vec2, extractor.model_name: facebook/wav2vec2-xls-r-300m, extractor.layer: 5}
+    cartesian:
+      seed: [0, 1, 2]
+  device_launcher:
+    device: slurm               # or `local` to run the jobs one after the other
+    job-name: intensity_prediction
+    cpus-per-task: 24
+    gpus-per-node: 1
+    ntasks-per-node: 1
+    nodes: 1
+    time: "01:59:00"            # always quoted
+    open-mode: append
+    # Cluster-specific keys go here too, e.g. account, qos, constraint, and a `setup`
+    # string run before the job (module loads, HF_HOME, HF_HUB_OFFLINE=1 on offline nodes).

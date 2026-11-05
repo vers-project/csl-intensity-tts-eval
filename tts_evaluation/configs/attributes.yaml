@@ -1,0 +1,28 @@
+# Attribute table and failure screen: the manifests joined with the predictor and the
+# speech-eval runs (job ↔ source from each run's sweep_lookup.csv).  No audio is read.
+# Output: <output_dir>/{attributes.csv, screen_summary.csv, coverage.csv}.
+#
+# Paths starting with /path/to/ (and <date>/<time> folders) are placeholders: point them at
+# your own runs.
+#
+# Run with (from tts_evaluation/):
+#   uv run --extra cpu launch_experiment --script scripts/build_attribute_table.py \
+#       --config configs/attributes.yaml
+
+runs:
+  manifests: /path/to/outputs/tts_evaluation/manifests/<date>/<time>/0/manifests
+  pphi:      /path/to/outputs/tts_evaluation/predictor/<date>/<time>
+  metrics:   /path/to/outputs/tts_evaluation/metrics/<date>/<time>
+
+sources: [cosyvoice3_emotion, cosyvoice3_effort, indextts2_emotion, indextts2_effort,
+          qwen3tts_emotion, qwen3tts_effort, ravdess, avid]
+
+# The analysis columns ({name: column}); coverage.csv counts their NaNs.
+attributes:
+  intensity: pphi.leq_db
+  rms:       level.rms_dbfs
+
+launcher:
+  output_dir: /path/to/outputs/tts_evaluation/attributes
+  device_launcher:
+    device: local

@@ -1,0 +1,67 @@
+[build-system]
+requires = ["setuptools<81"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "qwen3tts-generation"
+description = "Qwen3-TTS VoiceDesign sample generation"
+version = "0.1.0"
+requires-python = "==3.12.*"
+dependencies = [
+    "setuptools<81",
+    # launch experiments
+    "experiment-launcher",
+    "generation-design",
+    # qwen-tts and its deps (pins transformers==4.57.3)
+    "qwen-tts==0.1.1",
+    "soundfile",
+    "torch",
+]
+
+[project.optional-dependencies]
+cpu = [
+  "torch",
+  "torchaudio",
+  "torchcodec",
+]
+cu128 = [
+  "torch",
+  "torchaudio",
+  "torchcodec",
+]
+
+[tool.uv]
+conflicts = [
+  [
+    { extra = "cpu" },
+    { extra = "cu128" },
+  ],
+]
+
+[tool.uv.sources]
+torch = [
+  { index = "pytorch-cu128", extra = "cu128"},
+  { index = "pytorch-cpu", extra = "cpu"},
+]
+torchaudio = [
+  { index = "pytorch-cu128", extra = "cu128"},
+  { index = "pytorch-cpu", extra = "cpu"},
+]
+# Always pull torchcodec from CPU index regardless of the global choice
+torchcodec = { index = "pytorch-cpu" }
+
+experiment-launcher = { git = "https://github.com/vers-project/slurm_launcher", tag = "v0.1.0" }
+generation-design = { path = "../generation_design", editable = true }
+
+[tool.setuptools]
+packages = []
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true

@@ -1,0 +1,45 @@
+# Alpha-ratio baseline over the 8 manifests: utterance alpha ratio and the level it predicts
+# with the linear fit of the intensity estimation benchmark.
+#
+# One job per manifest, as predict.yaml.  Each writes <output_dir>/<job>/predictions/
+# utterances.csv (manifest columns + alpha, leq_pred_deg1), which joins back on utt_id.
+#
+# Paths starting with /path/to/ (and <date>/<time> folders) are placeholders: point them at
+# your own runs.
+#
+# Run from a clone of vocal-intensity-prediction:
+#   uv run --extra cu128 launch_experiment --script scripts/predict_tilt_baseline.py \
+#       --config <this file>
+
+# The speech frames are the evaluation predictor's (job 3 of the predictor grid), the run
+# the alpha-ratio fit was extracted with (intensity_estimation/configs/extract_window_tilt.yaml).
+training_config: /path/to/outputs/intensity_prediction/<date>/<time>/3/config.yaml
+fits_json: /path/to/outputs/window_tilt/<date>/<time>/0/fits.json
+level: leq
+degrees: [1]
+
+data:
+  metadata_csv: null              # set per job by the sweep
+  dataset_roots:
+    cosyvoice3: /path/to/outputs/tts_generation/cosyvoice3/
+    indextts2:  /path/to/outputs/tts_generation/indextts2/
+    qwen3tts:   /path/to/outputs/tts_generation/qwen3tts/
+    RAVDESS:    /path/to/RAVDESS/
+    AVID:       /path/to/AVID/
+  num_workers: 8
+
+launcher:
+  output_dir: /path/to/outputs/tts_evaluation/tilt
+  sweep:
+    zip:
+      source:
+        - {data.metadata_csv: /path/to/outputs/tts_evaluation/manifests/<date>/<time>/0/manifests/cosyvoice3_emotion.csv}
+        - {data.metadata_csv: /path/to/outputs/tts_evaluation/manifests/<date>/<time>/0/manifests/cosyvoice3_effort.csv}
+        - {data.metadata_csv: /path/to/outputs/tts_evaluation/manifests/<date>/<time>/0/manifests/indextts2_emotion.csv}
+        - {data.metadata_csv: /path/to/outputs/tts_evaluation/manifests/<date>/<time>/0/manifests/indextts2_effort.csv}
+        - {data.metadata_csv: /path/to/outputs/tts_evaluation/manifests/<date>/<time>/0/manifests/qwen3tts_emotion.csv}
+        - {data.metadata_csv: /path/to/outputs/tts_evaluation/manifests/<date>/<time>/0/manifests/qwen3tts_effort.csv}
+        - {data.metadata_csv: /path/to/outputs/tts_evaluation/manifests/<date>/<time>/0/manifests/ravdess.csv}
+        - {data.metadata_csv: /path/to/outputs/tts_evaluation/manifests/<date>/<time>/0/manifests/avid.csv}
+  device_launcher:
+    device: local

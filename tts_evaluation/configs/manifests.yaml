@@ -1,0 +1,63 @@
+# One VAD-trimmed evaluation manifest per source: the six generation runs and the two
+# natural references.
+#
+# Output: <output_dir>/manifests/<source>.csv (8 sources) + summary.csv.  The predictor
+# (predict.yaml), the alpha-ratio baseline (tilt_predict.yaml) and speech-eval (metrics.yaml)
+# read these manifests with the SAME dataset_roots as below.
+#
+# Paths starting with /path/to/ (and <date>/<time> folders) are placeholders: point them at
+# your own runs.
+#
+# Run with (from tts_evaluation/):
+#   uv run --extra cpu launch_experiment --script scripts/build_eval_manifests.py \
+#       --config configs/manifests.yaml
+
+# A TTS row's corpus is its system; its signal_path starts at the experiment folder.
+dataset_roots:
+  cosyvoice3: /path/to/outputs/tts_generation/cosyvoice3/
+  indextts2:  /path/to/outputs/tts_generation/indextts2/
+  qwen3tts:   /path/to/outputs/tts_generation/qwen3tts/
+  RAVDESS:    /path/to/RAVDESS/
+  AVID:       /path/to/AVID/
+
+# The generation runs, relative to <root>/<experiment>/: the <date>/<time> folder that
+# tts_generation/<system>/configs/<experiment>.yaml wrote.
+tts:
+  cosyvoice3:
+    emotion: <date>/<time>
+    effort:  <date>/<time>
+  indextts2:
+    emotion: <date>/<time>
+    effort:  <date>/<time>
+  qwen3tts:
+    emotion: <date>/<time>
+    effort:  <date>/<time>
+
+# Natural references.  Sentence ids as in the emotion generation configs.
+ravdess:
+  metadata_csv: /path/to/metadata/ravdess_metadata.csv
+  sentences:
+    kids: "Kids are talking by the door"
+    dogs: "Dogs are sitting by the door"
+
+# The whole AVID test split: the effort prompts and the natural targets.  Same table as the
+# effort generation configs (hand annotation merged in).
+avid:
+  metadata_csv: /path/to/metadata/avid_metadata_annotated.csv
+  corpus: AVID
+  split: test
+  anchor: normal
+  channel: 0                      # speech mic (1 = EGG); a row's own `channel` wins
+
+# Silero outer-silence trim (audio_utils.data.vad.DEFAULT_VAD_PARAMS).
+vad:
+  threshold: 0.5
+  min_island_ms: 100
+  min_silence_ms: 100
+  speech_pad_ms: 30
+  onnx: false
+
+launcher:
+  output_dir: /path/to/outputs/tts_evaluation/manifests
+  device_launcher:
+    device: local

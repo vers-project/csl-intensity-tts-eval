@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "generation-design"
+version = "0.1.0"
+description = "Controlled generation design shared by the TTS generation scripts"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy",
+    "pandas",
+    "soundfile",
+]
+
+[project.optional-dependencies]
+test = ["pytest"]
+
+[tool.setuptools.packages.find]
+include = ["generation_design*"]
